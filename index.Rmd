@@ -349,3 +349,20 @@ scatter.ingredient_score_over_time <-
 
 scatter.ingredient_score_over_time
 ```
+
+# Part 5: Make the worst plot you can!
+
+Using the `chocolate` dataset, 
+
+1) Make the absolute worst plot that you can. You need to customize it in at least 7 ways to make it awful.
+```{r}
+chocolate.with_cont.cobo_geq_10$review_date <- factor(chocolate_with_cont.cobo_geq_10$review_date)
+chocolate.with_cont.cobo_geq_10$continent <- factor(chocolate_with_cont.cobo_geq_10$continent)
+
+chocolate.with_cont.cobo_geq_10 %>%
+  group_by(review_date, continent) %>%
+  summarize(mean_rating = mean(rating)) %>%
+  ggplot(aes(x = review_date, y = mean_rating, fill = continent)) +
+  geom_boxplot()
+```
+
