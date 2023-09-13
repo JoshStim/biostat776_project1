@@ -1,0 +1,353 @@
+---
+title: "Project 1: Chocolate Bars"
+author: "Josh Stim"
+date: "2023-09-06"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+Part 0: Getting started
+
+Install relevant packages
+
+```{r}
+install.packages("tidyverse")
+install.packages("tidytuesdayR")
+```
+
+Load relevant packages from library
+
+```{r}
+library(tidyverse)
+library(tidytuesdayR)
+library(here)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(forcats)
+library(gapminder)
+```
+
+Upload chocolate data
+
+```{r}
+# creates data folder if one doesn't exist locally
+if (!dir.exists(here("data"))) {
+  dir.create(here("data"))
+}
+
+# saves data only if it doesn't exist locally
+if (!file.exists(here("data","chocolate.RDS"))) {
+  url_csv <- "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-01-18/chocolate.csv"
+  chocolate <- readr::read_csv(url_csv)
+  
+  # save the file to RDS objects
+  saveRDS(chocolate, file = here("data", "chocolate.RDS"))
+}
+
+# read in the .RDS locally from our computing environment
+chocolate <- readRDS(here("data", "chocolate.RDS"))
+as_tibble(chocolate)
+```
+
+Part 1: Explore Data
+
+1)  Below, I created a histogram of the chocolate bar rating scores. I
+    decided to use 25 bins, since this ensures that each bin represents
+    the frequency of only one numerical rating. Additionally, the bars
+    in the histogram are centered on the rating they represent, making
+    it easier to interpret.
+
+```{r}
+ratings.hist.bin13 <- ggplot(data = chocolate, aes(x = rating)) +
+  geom_histogram(bins = 13) +
+  labs(title = "Distribution of Chocolate Bar Ratings", 
+       x = "Rating", y = "Count")
+
+ratings.hist.bin13
+
+ratings.hist.bin25 <- ggplot(data = chocolate, aes(x = rating)) +
+  geom_histogram(bins = 25) +
+  labs(title = "Distribution of Chocolate Bar Ratings", 
+       x = "Rating", y = "Count")
+
+ratings.hist.bin25
+```
+
+2)  Consider the countries where the beans originated from. How many
+    reviews come from each country of bean origin?
+
+```{r}
+n_reviews_by_cobo <- chocolate %>%
+  group_by(country_of_bean_origin) %>%
+  summarize(n_reviews = n()) %>%
+  arrange(desc(n_reviews))
+```
+
+3)  What is average rating scores from reviews of chocolate bars that
+    have Ecuador as country_of_bean_origin in this dataset? For this
+    same set of reviews, also calculate
+    
+(1) the total number of reviews and (2) the standard deviation of the
+    rating scores. Your answer should be a new data frame with these
+    three summary statistics in three columns. Label the name of these
+    columns mean, sd, and total.
+
+```{r}
+chocolate.beans_from_equador <- chocolate %>%
+  filter(country_of_bean_origin == "Ecuador")
+
+chocolate.beans_from_equador %>%
+  summarize(mean = mean(rating), sd = sd(rating), total = n())
+
+chocolate.beans_from_equador
+```
+
+4)  Which country makes the best chocolate (or has the highest ratings
+    on average) with beans from Ecuador?
+
+```{r}
+chocolate.beans_from_equador %>%
+  group_by(company_location) %>%
+  summarise(mean_rating = mean(rating)) %>%
+  filter(mean_rating == max(mean_rating))
+```
+
+5)  Calculate the average rating across all country of origins for
+    beans. Which top 3 countries have the highest ratings on average?
+
+```{r}
+mean_rating_by_bean_origin <- chocolate %>%
+  group_by(country_of_bean_origin) %>%
+  summarize(n_reviews = n(), mean_rating = mean(rating)) %>%
+  arrange(desc(mean_rating))
+
+mean_rating_by_bean_origin
+```
+
+Following up on the previous problem, now remove any countries of bean
+origins that have less than 10 chocolate bar reviews. Now, which top 3
+countries have the highest ratings on average?
+
+```{r}
+mean_rating_by_bean_origin %>%
+  filter(n_reviews >= 10)
+```
+
+7)  For this last part, let's explore the relationship between percent
+    chocolate and ratings.
+
+a)  Identify the countries of bean origin with at least 50 reviews.
+    Remove reviews from countries are not in this list.
+
+```{r}
+chocolate.cobo_geq_50 <- chocolate %>%
+  group_by(country_of_bean_origin) %>%
+  filter(n() >= 50) %>%
+  ungroup()
+
+chocolate.cobo_geq_50
+```
+
+(b) Using the variable describing the chocolate percentage for each
+    review, create a new column that groups chocolate percentages into
+    one of four groups: (i) \<60%, (ii) \>=60 to \<70%, (iii) \>=70 to
+    \<90%, and (iii) \>=90% (Hint check out the substr() function in
+    base R and the case_when() function from dplyr -- see example
+    below).
+
+```{r}
+tmp <- substr(chocolate.cobo_geq_50$cocoa_percent,1,2)
+chocolate.cobo_geq_50$cocoa_percent_discrete <-
+  case_when(
+  tmp < 60 ~ "<60%",
+  tmp >= 60 & tmp < 70 ~ ">=60% to <70%",
+  tmp >= 70 & tmp < 90 ~ ">=70% to <90%",
+  tmp >= 90 ~ ">=90%"
+  )
+```
+
+(c) Using the new column described in #2, re-order the factor levels (if
+    needed) to be starting with the smallest percentage group and
+    increasing to the largest percentage group (Hint check out the
+    fct_relevel() function from forcats).
+
+```{r}
+chocolate.cobo_geq_50$cocoa_percent_discrete <- 
+  chocolate.cobo_geq_50$cocoa_percent_discrete %>%
+  factor() %>%
+  fct_relevel(sort)
+```
+
+(d) For each country, make a set of four side-by-side boxplots plotting
+    the groups on the x-axis and the ratings on the y-axis. These plots
+    should be faceted by country.
+
+```{r}
+boxplot.rating_by_country <- 
+  ggplot(data = chocolate.cobo_geq_50, aes(x = cocoa_percent_discrete, y = rating)) +
+  geom_boxplot() +
+  facet_wrap(~country_of_bean_origin)
+
+boxplot.rating_by_country
+```
+
+```{r}
+#collapsing across countries
+chocolate.cobo_geq_50 %>%
+  group_by(cocoa_percent_discrete) %>%
+  summarize(n = n(), mean = mean(rating), sd = sd(rating))
+
+#means within countries
+chocolate.cobo_geq_50 %>%
+  group_by(country_of_bean_origin, cocoa_percent_discrete) %>%
+  summarize(n = n(), mean = mean(rating), sd = sd(rating)) %>%
+  arrange(cocoa_percent_discrete)
+```
+Based on the boxplot and summary table, it seems like the cocoa
+percentages with highest ratings are between 60% and 90%. Overall, this
+trend is observed in all countries that produced cocoa beans.
+
+Part 2: Join two datasets together
+
+Load gapminder data
+```{r}
+gapminder.data <- unique(gapminder::gapminder[, c("country", "continent")])
+```
+
+Task 1) Make a new column called `continent` in `chocolate` dataset that assigns a continent to each country_of_bean_origin.
+Also manually add continents that have not been matched.
+```{r}
+# create copy of raw dataframe
+chocolate.with_cont <- chocolate
+
+# standardize spelling of certain countries in chocolate.with_cont.country_of_bean_origin
+chocolate.with_cont$country_of_bean_origin <-
+  case_when(
+    chocolate.with_cont$country_of_bean_origin %in% c("Trinidad", "Tobago") ~ "Trinidad and Tobago",
+    chocolate.with_cont$country_of_bean_origin %in% c("Sao Tome", "Principe", "Sao Tome & Principe") ~ "Sao Tome and Principe",
+    chocolate.with_cont$country_of_bean_origin %in% c("Congo", "DR Congo") ~ "Congo, Dem. Rep.",
+    chocolate.with_cont$country_of_bean_origin %in% c("U.S.A.", "USA") ~ "United States",
+    .default = as.character(chocolate.with_cont$country_of_bean_origin)
+  )
+
+# join chocolate with gapminder.data by country
+chocolate.with_cont <- left_join(chocolate.with_cont, gapminder.data, 
+                       join_by(country_of_bean_origin == country))
+
+# manually add continents to chocolate for countries not listed in gapminder.data
+chocolate.with_cont$continent <-
+  case_when(
+    chocolate.with_cont$country_of_bean_origin %in% 
+      c("Belize", "Grenada", "Martinique", "St. Lucia", "St.Vincent-Grenadines", "Suriname") ~ "Americas",
+    chocolate.with_cont$country_of_bean_origin %in%
+      c("Burma", "Sumatra", "Sulawesi") ~ "Asia",
+    chocolate.with_cont$country_of_bean_origin %in%
+      c("Ivory Coast") ~ "Africa",
+    chocolate.with_cont$country_of_bean_origin %in%
+      c("Fiji", "Papua New Guinea", "Vanuatu", "Solomon Islands", "Samoa") ~ "Oceania",
+    .default = as.character(chocolate.with_cont$continent)
+  )
+
+```
+
+Task 2 & 3) Remove country of bean origin named "Blend" and remove countries with fewer than 10 reviews
+```{r}
+chocolate.with_cont.cobo_geq_10 <- chocolate.with_cont %>%
+  filter(country_of_bean_origin != "Blend") %>%
+  group_by(country_of_bean_origin) %>%
+  filter(n() >= 10) %>%
+  ungroup()
+  
+chocolate.with_cont.cobo_geq_10
+```
+
+Task 4) Make violin plots with ratings on y-axis and continent on x-axis
+```{r}
+violin.ratings_by_continent <-
+  ggplot(data = chocolate.with_cont.cobo_geq_10, aes(x = continent, y = rating, fill = continent)) +
+  geom_violin() +
+  geom_jitter(width = 0.05) +
+  stat_summary(fun = "mean", color = "red", size = 0.3) +
+  theme(legend.position = "none")
+
+violin.ratings_by_continent
+```
+Part 3: Convert Wide Data into Long Data
+
+1) Create a new set of columns titled beans, sugar, cocoa_butter, vanilla, letchin, and salt that contain a 1 or 0 representing whether or not that review for the chocolate bar contained that ingredient (1) or not (0).
+
+```{r}
+# convert missing ingredient cell to empty string
+chocolate$ingredients[is.na(chocolate$ingredients)] <- " "
+
+# create ingredient columns
+chocolate.with_ingredients <- 
+  chocolate %>%
+  mutate(
+    beans = str_detect(ingredients, "B"),
+    cocoa_butter = str_detect(ingredients, "C"),
+    vanilla = str_detect(ingredients, "V"),
+    letchin = str_detect(ingredients, "L"),
+    salt = str_detect(ingredients, "Sa"),
+    sugar = str_detect(ingredients, "S")
+  )
+```
+
+2) Create a new set of columns titled char_cocoa, char_sweet, char_nutty, char_creamy, char_roasty, char_earthy that contain a 1 or 0 representing whether or not that the most memorable characteristic for the chocolate bar had that word (1) or not (0). For example, if the word “sweet” appears in the most_memorable_characteristics, then record a 1, otherwise a 0 for that review in the char_sweet column (Hint: check out str_detect() from the stringr package).
+
+```{r}
+chocolate.with_ingredients <- 
+  chocolate.with_ingredients %>%
+  mutate(
+    char_cocoa = str_detect(most_memorable_characteristics, "cocoa"),
+    char_sweet = str_detect(most_memorable_characteristics, "sweet"),
+    char_nutty = str_detect(most_memorable_characteristics, "nutty"),
+    char_creamy = str_detect(most_memorable_characteristics, "creamy"),
+    char_roasty = str_detect(most_memorable_characteristics, "roasty"),
+    char_earthy = str_detect(most_memorable_characteristics, "earthy")
+  )
+```
+
+3) For each year (i.e. review_date), calculate the mean value in each new column you created across all reviews for that year. (Hint: If all has gone well thus far, you should have a dataset with 16 rows and 13 columns).
+
+```{r}
+table.mean_ingredients_by_year <- 
+  chocolate.with_ingredients %>%
+  select(review_date,beans:char_earthy) %>%
+  group_by(review_date) %>%
+  summarize(across(beans:char_earthy, mean))
+
+table.mean_ingredients_by_year
+```
+
+4) Convert this wide dataset into a long dataset with a new feature and mean_score column.
+
+```{r}
+table.mean_ingredients_by_year.long <-
+  pivot_longer(table.mean_ingredients_by_year,
+               cols = beans:char_earthy,
+               names_to = "ingredient",
+               values_to = "mean_score")
+
+table.mean_ingredients_by_year.long
+```
+
+Part 4: Data Visualization
+
+```{r}
+scatter.ingredient_score_over_time <- 
+  ggplot(data = table.mean_ingredients_by_year.long, 
+         aes(x = review_date, y = mean_score, color = ingredient)) +
+  geom_point() +
+  geom_smooth(
+    method = "loess",
+    se = FALSE
+  ) +
+  facet_wrap(~ingredient) +
+  theme(legend.position = "none")
+
+scatter.ingredient_score_over_time
+```
