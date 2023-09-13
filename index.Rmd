@@ -12,10 +12,10 @@ Part 0: Getting started
 
 Install relevant packages
 
-```{r}
-install.packages("tidyverse")
-install.packages("tidytuesdayR")
-```
+# ```{r}
+# install.packages("tidyverse")
+# install.packages("tidytuesdayR")
+# ```
 
 Load relevant packages from library
 
