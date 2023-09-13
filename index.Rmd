@@ -12,10 +12,10 @@ Part 0: Getting started
 
 Install relevant packages
 
-# ```{r}
+```{r}
 # install.packages("tidyverse")
 # install.packages("tidytuesdayR")
-# ```
+```
 
 Load relevant packages from library
 
@@ -324,7 +324,6 @@ table.mean_ingredients_by_year
 ```
 
 4) Convert this wide dataset into a long dataset with a new feature and mean_score column.
-
 ```{r}
 table.mean_ingredients_by_year.long <-
   pivot_longer(table.mean_ingredients_by_year,
@@ -336,7 +335,6 @@ table.mean_ingredients_by_year.long
 ```
 
 Part 4: Data Visualization
-
 ```{r}
 scatter.ingredient_score_over_time <- 
   ggplot(data = table.mean_ingredients_by_year.long, 
