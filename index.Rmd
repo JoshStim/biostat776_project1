@@ -269,8 +269,8 @@ Task 4) Make violin plots with ratings on y-axis and continent on x-axis
 violin.ratings_by_continent <-
   ggplot(data = chocolate.with_cont.cobo_geq_10, aes(x = continent, y = rating, fill = continent)) +
   geom_violin() +
-  geom_jitter(width = 0.05) +
-  stat_summary(fun = "mean", color = "red", size = 0.3) +
+  geom_jitter(size = 0.5, width = 0.1) +
+  stat_summary(fun = "mean", color = "white", size = 0.3) +
   theme(legend.position = "none")
 
 violin.ratings_by_continent
@@ -356,13 +356,51 @@ Using the `chocolate` dataset,
 
 1) Make the absolute worst plot that you can. You need to customize it in at least 7 ways to make it awful.
 ```{r}
-chocolate.with_cont.cobo_geq_10$review_date <- factor(chocolate_with_cont.cobo_geq_10$review_date)
-chocolate.with_cont.cobo_geq_10$continent <- factor(chocolate_with_cont.cobo_geq_10$continent)
-
 chocolate.with_cont.cobo_geq_10 %>%
-  group_by(review_date, continent) %>%
-  summarize(mean_rating = mean(rating)) %>%
-  ggplot(aes(x = review_date, y = mean_rating, fill = continent)) +
-  geom_boxplot()
+  ggplot(aes(x = factor(country_of_bean_origin), fill = factor(review_date), y = rating)) +
+  geom_boxplot() +
+  facet_wrap(~review_date) +
+  labs(title = "Rating by review year and country of bean origin") +
+  theme(axis.title.y = element_text(size = 5),
+        axis.title.x = element_text(size = 5),
+        panel.grid.major = element_line(color = "blue"),
+        plot.background = element_rect(fill = "red"),
+        plot.title = element_text(size = 25))
+```
+
+# Part 6: Make my plot better!
+
+This is the original plot:
+```{r}
+chocolate %>%
+    ggplot(aes(
+        x = as.factor(review_date),
+        y = rating,
+        fill = review_date
+    )) +
+    geom_violin()
+```
+
+This is the new-and-improved plot:
+```{r}
+chocolate %>%
+    ggplot(aes(
+        x = as.factor(review_date),
+        y = rating,
+        fill = as.factor(review_date)
+    )) +
+    geom_half_violin(position = position_nudge(x = -0.15), fill = "chocolate") +
+  geom_jitter(size = 0.3, width = 0.075, alpha = 0.35) +
+  labs(title = "Chocolate Ratings by Year of Review") +
+  xlab("Year of Review") +
+  ylab("Rating") +
+  theme_bw(base_family = "Times", base_size = 15) +
+  theme(legend.position = "none",
+        axis.title.x = element_text(size = 15, vjust = -2),
+        axis.title.y = element_text(size = 15, vjust = 2),
+        axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        plot.title = element_text(size = 18, hjust = 0.5, vjust = 2),
+        plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "inches"))
 ```
 
