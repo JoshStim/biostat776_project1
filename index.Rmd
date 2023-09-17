@@ -1,5 +1,5 @@
 ---
-title: "Project 1: Chocolate Bars"
+title: "Project 1"
 author: "Josh Stim"
 date: "2023-09-06"
 output: html_document
@@ -7,30 +7,32 @@ editor_options:
   markdown: 
     wrap: 72
 ---
-# Project 1 {.tabset .tabset-fade}
+
+# Chocolate Bars {.tabset .tabset-fade}
 
 ## Part 0. Getting started
 
 Install relevant packages
+
 ```{r}
-# install.packages("tidyverse")
-# install.packages("tidytuesdayR")
+## Install the tidyverse package if you don't have it
+if (!require("tidyverse", quietly = TRUE)) {
+    install.packages("tidyverse")
+}
 ```
 
 Load relevant packages from library
+
 ```{r}
 library(tidyverse)
 library(tidytuesdayR)
 library(here)
-library(dplyr)
-library(ggplot2)
-library(lubridate)
-library(forcats)
 library(gapminder)
 library(gghalves)
 ```
 
 Upload chocolate data
+
 ```{r}
 # creates data folder if one doesn't exist locally
 if (!dir.exists(here("data"))) {
@@ -55,31 +57,30 @@ as_tibble(chocolate)
 
 ### 1.1. Make a Histogram
 
-Below, I created a histogram of the chocolate bar rating scores.
-I decided to use 25 bins, since this ensures that each bin represents
-the frequency of only one numerical rating. Additionally, the bars in
-the histogram are centered on the rating they represent, making it
-easier to interpret.
+*Make a histogram of the rating scores to visualize the overall
+distribution of scores. Change the number of bins from the default to
+10, 15, 20, and 25. Pick on the one that you think looks the best.
+Explain what the difference is when you change the number of bins and
+explain why you picked the one you did.*
+
 ```{r}
-ratings.hist.bin13 <- ggplot(data = chocolate, aes(x = rating)) +
-  geom_histogram(bins = 13) +
-  labs(title = "Distribution of Chocolate Bar Ratings", 
-       x = "Rating", y = "Count")
-
-ratings.hist.bin13
-
-ratings.hist.bin25 <- ggplot(data = chocolate, aes(x = rating)) +
-  geom_histogram(bins = 25) +
-  labs(title = "Distribution of Chocolate Bar Ratings", 
-       x = "Rating", y = "Count")
-
-ratings.hist.bin25
+chocolate %>%
+  ggplot(aes(x = rating)) +
+    geom_histogram(bins = 25) +
+    labs(title = "Distribution of Chocolate Bar Ratings", 
+         x = "Rating", y = "Count")
 ```
 
-### 1.2. Count reviews by country of bean origin
+**Josh:** Above is a histogram of the chocolate bar rating scores. I
+decided to use 25 bins, since this ensures that each bin represents the
+frequency of only one numerical rating. Additionally, the bars in the
+histogram are centered on the rating they represent, making it easier to
+interpret.
 
-Consider the countries where the beans originated from. How many
-reviews come from each country of bean origin?
+### 1.2. Count reviews for each country of bean origin
+
+*How many reviews come from each country of bean origin?*
+
 ```{r}
 n_reviews_by_cobo <- chocolate %>%
   group_by(country_of_bean_origin) %>%
@@ -91,26 +92,27 @@ n_reviews_by_cobo
 
 ### 1.3. Summarize ratings of beans from Ecuador
 
-What is the average rating scores from reviews of chocolate bars that
-have Ecuador as country_of_bean_origin in this dataset? For this
-same set of reviews, also calculate (1) the total number of reviews and 
-(2) the standard deviation of the rating scores. Your answer should be a 
-new data frame with these three summary statistics in three columns. Label 
-the name of these columns mean, sd, and total.
+*What is the average rating scores from reviews of chocolate bars that*
+*have Ecuador as country_of_bean_origin in this dataset? For this same*
+*set of reviews, also calculate*
+
+*(1) the total number of reviews and (2) the standard deviation of the
+rating scores.*
+
 ```{r}
-chocolate.beans_from_equador <- chocolate %>%
+chocolate.beans_from_equador <- 
+  chocolate %>%
   filter(country_of_bean_origin == "Ecuador")
 
 chocolate.beans_from_equador %>%
   summarize(mean = mean(rating), sd = sd(rating), total = n())
-
-chocolate.beans_from_equador
 ```
 
 ### 1.4. Manufacturer with best chocolate from Ecuadorian beans
 
-Which company manufacturer makes the best chocolate (or has the
-highest ratings on average) with beans from Ecuador?
+*Which company manufacturer makes the best chocolate (or has the highest
+ratings on average) with beans from Ecuador?*
+
 ```{r}
 chocolate.beans_from_equador %>%
   group_by(company_manufacturer) %>%
@@ -118,12 +120,17 @@ chocolate.beans_from_equador %>%
   filter(mean_rating == max(mean_rating))
 ```
 
-### 1.5 Mean ratings for all countries of origin
+**Josh:** These are the five companies with the highest mean rating using beans
+from Ecuador.
 
-Calculate the average rating across all country of origins for
-beans. Which top 3 countries have the highest ratings on average?
+### 1.5. Mean ratings for all countries of origin
+
+*Calculate the average rating across all country of origins for beans.
+Which top 3 countries have the highest ratings on average?*
+
 ```{r}
-mean_rating_by_bean_origin <- chocolate %>%
+mean_rating_by_bean_origin <-
+  chocolate %>%
   group_by(country_of_bean_origin) %>%
   summarize(n_reviews = n(), mean_rating = mean(rating)) %>%
   arrange(desc(mean_rating))
@@ -131,23 +138,36 @@ mean_rating_by_bean_origin <- chocolate %>%
 mean_rating_by_bean_origin
 ```
 
-### 1.6 Mean ratings from countries with $\geq$ 10 reviews
+**Josh:** We see that Tobago, China, and Sao Tome & Principe have the
+highest average ratings. However, note that these countries have very
+few reviews, so is it really fair to say that these countries make the
+best beans?
 
-Following up, remove any countries of bean origins that have less 
-than 10 chocolate bar reviews. Now, which top 3 countries have 
-the highest ratings on average?
+### 1.6. Mean ratings from countries with $\geq$ 10 reviews
+
+*Following up, remove any countries of bean origins that have less than
+10 chocolate bar reviews. Now, which top 3 countries have the highest
+ratings on average?*
+
 ```{r}
 mean_rating_by_bean_origin %>%
   filter(n_reviews >= 10)
 ```
 
-### 1.7 Relationship between percent chocolate and rating
+**Josh:** After removing countries with fewer than 10 reviews, we see that
+**Solomon Islands**, **Congo**, and **Cuba** have the highest average
+bean ratings.
 
-For this last part, let's explore the relationship between percent
-chocolate and ratings.
+### 1.7. Relationship between percent chocolate and rating
 
-a)  Identify the countries of bean origin with at least 50 reviews.
-    Remove reviews from countries are not in this list.
+*For this last part, let's explore the relationship between percent
+chocolate and ratings.*
+
+*a) Identify the countries of bean origin with at least 50 reviews.
+Remove reviews from countries are not in this list.*
+
+**Josh:** Below is a subset of the chocolate dataset containing data from only
+countries that had 50 or more reviews.
 
 ```{r}
 chocolate.cobo_geq_50 <- chocolate %>%
@@ -158,69 +178,78 @@ chocolate.cobo_geq_50 <- chocolate %>%
 chocolate.cobo_geq_50
 ```
 
-(b) Using the variable describing the chocolate percentage for each
-    review, create a new column that groups chocolate percentages into
-    one of four groups: (i) \<60%, (ii) \>=60 to \<70%, (iii) \>=70 to
-    \<90%, and (iii) \>=90% (Hint check out the substr() function in
-    base R and the case_when() function from dplyr -- see example
-    below).
+*(b) Using the variable describing the chocolate percentage for each
+review, create a new column that groups chocolate percentages into one
+of four groups: *(i)* $<60 \%$, *(ii)* $\geq 60\%$ to $<70\%$, *(iii)* $\geq 70 \%$ 
+to $\leq 90 \%$, *and (iii)* $\geq 90 \%$.
+
+*(Hint check out the substr() function in base R and the case_when()
+function from dplyr -- see example below).*
 
 ```{r}
 tmp <- substr(chocolate.cobo_geq_50$cocoa_percent,1,2)
 chocolate.cobo_geq_50$cocoa_percent_discrete <-
   case_when(
   tmp < 60 ~ "<60%",
-  tmp >= 60 & tmp < 70 ~ "$>=60% to <70%",
+  tmp >= 60 & tmp < 70 ~ ">=60% to <70%",
   tmp >= 70 & tmp < 90 ~ ">=70% to <90%",
   tmp >= 90 ~ ">=90%"
-  )
+  ) %>%
+  factor()
+
+levels(chocolate.cobo_geq_50$cocoa_percent_discrete)
 ```
 
-(c) Using the new column described in #2, re-order the factor levels (if
-    needed) to be starting with the smallest percentage group and
-    increasing to the largest percentage group (Hint check out the
-    fct_relevel() function from forcats).
+*(c) Using the new column described in #2, re-order the factor levels
+(if needed) to be starting with the smallest percentage group and
+increasing to the largest percentage group (Hint check out the
+fct_relevel() function from forcats).*
 
 ```{r}
 chocolate.cobo_geq_50$cocoa_percent_discrete <- 
   chocolate.cobo_geq_50$cocoa_percent_discrete %>%
-  factor() %>%
   fct_relevel(sort)
+
+levels(chocolate.cobo_geq_50$cocoa_percent_discrete)
 ```
 
-(d) For each country, make a set of four side-by-side boxplots plotting
-    the groups on the x-axis and the ratings on the y-axis. These plots
-    should be faceted by country.
+*(d) For each country, make a set of four side-by-side boxplots plotting
+the groups on the x-axis and the ratings on the y-axis. These plots
+should be faceted by country.*
 
 ```{r fig.width = 10, fig.height = 7}
-boxplot.rating_by_country <- 
-  ggplot(data = chocolate.cobo_geq_50, aes(x = cocoa_percent_discrete, y = rating)) +
+chocolate.cobo_geq_50 %>%
+  ggplot(aes(x = cocoa_percent_discrete, y = rating)) +
   geom_boxplot() +
   facet_wrap(~country_of_bean_origin) +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-boxplot.rating_by_country
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "How Percent Cocoa affects Chocolate Ratings (by Country of Bean Origin)")
 ```
+
+**Josh:** Overall, it seems that cocoa percentages between 60% and 90% yield
+better ratings compared to those $<60\%$ or $>90\%$. This observation is
+generally consistent across countries of bean origin, the exceptions of
+Brazil and (perhaps) Blend. It is also worth noting that over a quarter
+of countries produced no chocolate with $<60\%$ or $>90\%$ cocoa.
+
+*On average, which category of chocolate percentage is most highly
+rated? Do these countries mostly agree or are there disagreements?*
 
 ```{r}
 #collapsing across countries
 chocolate.cobo_geq_50 %>%
   group_by(cocoa_percent_discrete) %>%
   summarize(n = n(), mean = mean(rating), sd = sd(rating))
-
-#means within countries
-chocolate.cobo_geq_50 %>%
-  group_by(country_of_bean_origin, cocoa_percent_discrete) %>%
-  summarize(n = n(), mean = mean(rating), sd = sd(rating)) %>%
-  arrange(cocoa_percent_discrete)
 ```
 
-Based on the boxplot and summary table, it seems like the cocoa
-percentages with highest ratings are between 60% and 90%. Overall, this
-trend is observed in all countries that produced cocoa beans.
+**Josh:** Based on the boxplots (and the table) we see that cocoa
+percentages between 60% and 90% generally yield higher ratings compared
+to cocoa percentages below 60% or above 90%. Additionally, it seems that
+the most common cocoa percentage is $\geq 70 \%$ to $90 \%$, as nearly
+84% of all chocolates with 50 or more reviews were in this category.
 
-## Part 2: Join two datasets together
+## Part 2. Join two datasets together
 
 ### 2.0. Load gapminder data
 
@@ -228,12 +257,15 @@ trend is observed in all countries that produced cocoa beans.
 gapminder.data <- unique(gapminder::gapminder[, c("country", "continent")])
 ```
 
-### 2.1 Merge `gapminder$continent` to `chocolate` dataset
+### 2.1. Merge `gapminder$continent` to `chocolate` dataset
 
-Also manually add continents that have not been matched.
+*Use this dataset it to create a new column called continent in our
+chocolate dataset that contains the continent name for each review where
+the country of bean origin is.*
+
+*Also manually add continents that have not been matched.*
+
 ```{r}
-# consider using setdiff()
-# 
 # create copy of raw dataframe
 chocolate.with_cont <- chocolate
 
@@ -264,10 +296,13 @@ chocolate.with_cont$continent <-
       c("Fiji", "Papua New Guinea", "Vanuatu", "Solomon Islands", "Samoa") ~ "Oceania",
     .default = as.character(chocolate.with_cont$continent)
   )
-
 ```
 
-### 2.2 - 2.3. Remove countries named "Blend" or with < 10 reviews
+### 2.2 - 2.3. Remove countries named "Blend" or with \<10 reviews
+
+*Only keep reviews that have reviews from countries of bean origin with
+at least 10 reviews.* *Also, remove the country of bean origin named
+"Blend".*
 
 ```{r}
 chocolate.with_cont.cobo_geq_10 <- chocolate.with_cont %>%
@@ -281,26 +316,39 @@ chocolate.with_cont.cobo_geq_10
 
 ### 2.4. Make continent-by-rating violin plot
 
+*Make a set of violin plots with ratings on the y-axis and continents on
+the x-axis.*
+
 ```{r}
-violin.ratings_by_continent <-
-  ggplot(data = chocolate.with_cont.cobo_geq_10, aes(x = continent, y = rating)) +
+chocolate.with_cont.cobo_geq_10 %>%
+  ggplot(aes(x = continent, y = rating)) +
   geom_violin(fill = "skyblue") +
   geom_jitter(size = 0.5, width = 0.1, alpha = 0.2) +
   stat_summary(fun = "mean", color = "white", size = 0.3) +
   theme(legend.position = "none") +
   theme_bw()
-
-violin.ratings_by_continent
 ```
 
-## Part 3: Convert Wide Data into Long Data
+**Josh:** Overall, there does not seem to be a difference in mean ratings across
+continents. However you may notice that a large proportion of ratings
+are coming from `Americas`. This may be due to the fact that `Americas`
+actually includes two continents: North and South America.
+
+**Josh:** Also, you may notice that, while the mean ratings are similar across
+continents, most of the lower rated chocolate bars (rating $\leq 2$)
+come from the Americas. This may be due to the fact that we have so many
+samples from `Americas`, and so it shouldn't be too surprising to see a
+greater number of extreme ratings compared to the other, less sampled
+continents.
+
+## Part 3. Convert Wide Data into Long Data
 
 ### 3.1. Create an indicator column for each ingredient
 
-Create a new set of columns titled beans, sugar, cocoa_butter,
-vanilla, letchin, and salt that contain a 1 or 0 representing
-whether or not that review for the chocolate bar contained that
-ingredient (1) or not (0).
+*Create a new set of columns titled beans, sugar, cocoa_butter, vanilla,
+letchin, and salt that contain a 1 or 0 representing whether or not that
+review for the chocolate bar contained that ingredient (1) or not (0).*
+
 ```{r}
 # convert missing ingredient cell to empty string
 chocolate$ingredients[is.na(chocolate$ingredients)] <- " "
@@ -320,14 +368,14 @@ chocolate.with_ingredients <-
 
 ### 3.2. Create an indicator column for each characteristic
 
-Create a new set of columns titled char_cocoa, char_sweet,
-char_nutty, char_creamy, char_roasty, char_earthy that contain a 1
-or 0 representing whether or not that the most memorable
-characteristic for the chocolate bar had that word (1) or not (0).
-For example, if the word "sweet" appears in the
-most_memorable_characteristics, then record a 1, otherwise a 0 for
-that review in the char_sweet column (Hint: check out str_detect()
-from the stringr package).
+*Create a new set of columns titled char_cocoa, char_sweet, char_nutty,
+char_creamy, char_roasty, char_earthy that contain a 1 or 0 representing
+whether or not that the most memorable characteristic for the chocolate
+bar had that word (1) or not (0). For example, if the word "sweet"
+appears in the most_memorable_characteristics, then record a 1,
+otherwise a 0 for that review in the char_sweet column (Hint: check out
+str_detect() from the stringr package).*
+
 ```{r}
 chocolate.with_ingredients <- 
   chocolate.with_ingredients %>%
@@ -343,10 +391,11 @@ chocolate.with_ingredients <-
 
 ### 3.3. Percent of bars that had each ingredient/characteristic (by year)
 
-For each year (i.e. review_date), calculate the mean value in each
-new column you created across all reviews for that year. (Hint: If
-all has gone well thus far, you should have a dataset with 16 rows
-and 13 columns).
+*For each year (i.e. review_date), calculate the mean value in each new
+column you created across all reviews for that year. (Hint: If all has
+gone well thus far, you should have a dataset with 16 rows and 13
+columns).*
+
 ```{r}
 table.mean_ingredients_by_year <- 
   chocolate.with_ingredients %>%
@@ -357,23 +406,48 @@ table.mean_ingredients_by_year <-
 table.mean_ingredients_by_year
 ```
 
-### 3.4. Convert wide dataset to long 
+### 3.4. Convert wide dataset to long
 
-Convert this wide dataset into a long dataset with a new feature and
-mean_score column.
+*Convert this wide dataset into a long dataset with a new feature and
+mean_score column.*
+
 ```{r}
 table.mean_ingredients_by_year.long <-
   pivot_longer(table.mean_ingredients_by_year,
                cols = beans:char_earthy,
                names_to = "ingredient",
-               values_to = "mean_score")
+               values_to = "mean_score") %>%
+  as.tibble()
+
+table.mean_ingredients_by_year.long$ingredient <-
+  table.mean_ingredients_by_year.long$ingredient %>%
+  factor() %>%
+  fct_relevel(
+    c("beans", "cocoa_butter","letchin", "salt", "sugar", "vanilla",
+      "char_cocoa", "char_creamy", "char_earthy", "char_nutty", "char_roasty", "char_sweet")
+    )
 
 table.mean_ingredients_by_year.long
 ```
 
-## Part 4: Data Visualization
+## Part 4. Data Visualization
 
 ### 4.1 - 4.4. Visualize changes in chocolate composition over the years
+
+*Use the functions in ggplot2 package to make a scatter plot of the
+mean_scores (y-axis) over time (x-axis). One point for each mean_score.
+For full credit, your plot should include:*
+
+*1) An overall title for the plot and a subtitle summarizing key trends
+that you found. Also include a caption in the figure with your name.*
+
+*2) Both the observed points for the mean_score, but also a smoothed
+non-linear pattern of the trend*
+
+*3) All plots should be shown in the one figure*
+
+*4) There should be an informative x-axis and y-axis label*
+
 ```{r}
 table.mean_ingredients_by_year.long %>%
   ggplot(aes(x = review_date, y = mean_score, color = ingredient)) +
@@ -383,13 +457,37 @@ table.mean_ingredients_by_year.long %>%
     se = FALSE
   ) +
   facet_wrap(~ingredient) +
-  theme(legend.position = "none")
-
+  theme(legend.position = "none") +
+  theme_bw() +
+  labs(title = "How have chocolate ingredients and characteristics change over time?",
+       subtitle = "Based on review data from 2006 to 2021",
+       x = "Year",
+       y = "Proportion of bars with feature")
 ```
 
-## Part 5: Make the worst plot you can!
+**Josh:** Overall, it seems that over the years, less letchin and vanilla are
+being included in chocolate bars. Cocoa butter has seen as small dip in
+popularity, but not as pronounced as that of letchin and vanilla. Beans
+and sugar are, by far, the most popular chocolate ingredient, with
+nearly every bar including them in their ingredient profile.
+
+## Part 5. Make the worst plot you can!
 
 ### 5.1 - 5.2. Create a terrible plot
+
+*Using the chocolate dataset (or any of the modified versions you made
+throughout this assignment or anything else you wish you build upon
+it):*
+
+*Make the absolute worst plot that you can. You need to customize it in
+at least 7 ways to make it awful. In your document, write 1 - 2
+sentences about each different customization you added (using bullets --
+i.e. there should be at least 7 bullet points each with 1-2 sentences),
+and how it could be useful for you when you want to make an awesome data
+visualization.*
+
+**Josh:** My terrible plot is shown below.
+
 ```{r}
 chocolate.with_cont.cobo_geq_10 %>%
   ggplot(aes(x = factor(country_of_bean_origin), fill = factor(review_date), y = rating)) +
@@ -403,11 +501,61 @@ chocolate.with_cont.cobo_geq_10 %>%
         plot.title = element_text(size = 25))
 ```
 
-## Part 6: Make my plot better!
+**Josh:** Here are the customizations I made.
+
+1)  `aes(x = factor(country_of_bean_origin), fill = factor(review_date), y = rating)`:
+    I created a boxplot with `country_of_bean_origin` on the x-axis,
+    `rating` on the y-axis, and `review_date` as the fill variable.
+    There are 34 countries, and 16 review dates, so the plot will
+    contain 34 \* 16 = 544 boxes (assuming there is data for every
+    country-year combo). This will be useful for making a great data visualization 
+    because it will allow me to easily toggle how I define my x, y, and fill variables.
+
+2)  `geom_boxplot()` This customization created a boxplot from my ggplot
+    object. I think this method of creating a boxplot is particularly
+    useful because it is so easy to customize.
+
+3)  `facet_wrap(~review_date)` I used this to create 16 facets, each
+    defined by a specific year between 2006 and 2021. This customization
+    is useful for separating visualizations by groups and makes it
+    easier to see relationships within groups.
+
+4)  `axis.title.y = element_text(size = 5)` I made the y-axis label have
+    a font-size of 5. This makes it very small and therefore difficult
+    to read. A better plot would have a larger font size.
+
+5)  `axis.title.x = element_text(size = 5)` I also made the x-axis label
+    have a font-size of 5. Again, a better plot would have a larger font
+    size.
+
+6)  `panel.grid.major = element_line(color = "blue")` This changed the
+    color of the grid lines on each facet. Not really necessary for this
+    plot, but could be necessary if the analyst wants to make it easier
+    to read coordinates on the plot.
+
+7)  `plot.background = element_rect(fill = "red")` Makes the canvas red.
+    This is completely unnecessary for this plot, and makes it look
+    quite ugly. I suppose this specification could be useful if someone
+    wants to adjust the contrast between their plot and the canvas.
+
+8)  `plot.title = element_text(size = 25)` I made the title have a
+    font-size of 25. This is simply too large for this already
+    overloaded plot. A better visualization would use a smaller font
+    size for the title.
+    
+## Part 6. Make my plot better!
 
 ### 6.1 - 6.2. Improve a plot
 
-This is the original plot:
+*The goal is to take my sad looking plot and make it better!*
+
+*You need to customize it in at least 7 ways to make it better. In your
+document, write 1 - 2 sentences about each different customization you
+added (using bullets -- i.e. there should be at least 7 bullet points
+each with 1-2 sentences), describing how you improved it.*
+
+**Josh:** I've reposted the original plot for reference:
+
 ```{r}
 chocolate %>%
     ggplot(aes(
@@ -418,25 +566,86 @@ chocolate %>%
     geom_violin()
 ```
 
-This is the new-and-improved plot:
+**Josh:** And here is my new-and-improved plot.
+
 ```{r fig.width = 10, fig.height = 7}
 chocolate %>%
-    ggplot(aes(
-        x = as.factor(review_date),
-        y = rating,
-        fill = as.factor(review_date)
+  ggplot(aes(
+      x = as.factor(review_date),
+      y = rating
     )) +
-    geom_half_violin(position = position_nudge(x = -0.15), fill = "chocolate") +
-  geom_jitter(size = 0.3, width = 0.075, alpha = 0.35) +
-  labs(title = "Chocolate Ratings by Year of Review") +
+  geom_half_violin(position = position_nudge(x = -0.15), fill = "chocolate") +
+  geom_jitter(size = 0.5, width = 0.075, alpha = 0.35) +
+  labs(title = "Chocolate ratings become less variable over time",
+       subtitle = "A visualization of chocolate ratings by year of review (from 2006 to 2021)",
+       caption = "Created by Josh Stim using `gghalves` and `ggplot2`") +
   xlab("Year of Review") +
   ylab("Rating") +
   theme_bw(base_family = "Times", base_size = 15) +
-  theme(legend.position = "none",
-        axis.title.x = element_text(size = 15, vjust = -2),
-        axis.title.y = element_text(size = 15, vjust = 2),
-        axis.text.x = element_text(size = 10),
-        axis.text.y = element_text(size = 10),
-        plot.title = element_text(size = 18, hjust = 0.5, vjust = 2),
+  theme(axis.title.x = element_text(size = 18, vjust = -2),
+        axis.title.y = element_text(size = 18, vjust = 2),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        plot.caption = element_text(size = 9, vjust = -5),
+        plot.title = element_text(size = 20, vjust = 2),
         plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "inches"))
+```
+
+**Josh:** I made the following customizations:
+
+1)  `geom_half_violin(position = position_nudge(x = -0.15), fill = "chocolate", scale = "area", trim = TRUE)`
+    Violin plots are redundant, in that they show the same density
+    twice. I decided to use a half-violin plot (from library
+    `gghalves`), which is exactly what it sounds like: it allows you to
+    plot only half of the violin. I also nudged each half-violin 0.15
+    x-units to the left and colored all of them the same color (having
+    different colors is unnecessary and might cause confusion).
+
+2)  `geom_jitter(size = 0.5, width = 0.075, alpha = 0.35)` I also wanted
+    to plot the individual data points within each year, so the viewer
+    could get a better idea of how many points were within each year. I
+    adjusted the size of the points, the width of the jitter, and made
+    the points translucent by setting `alpha = 0.35`.
+
+3)  `labs(title = "Chocolate ratings become less variable over time",  subtitle = "A visualization of chocolate ratings by year of review (from 2006 to 2021)",  caption = "Created by Josh Stim using the gghalves and ggplot2")`
+    Created an informative title and subtitle for the plot. Also created
+    a caption to document who created the visualization, and with what R
+    packages.
+
+4)  `theme_bw(base_family = "Times", base_size = 15)` I really like the
+    `theme_bw()` ggplot theme. I think it looks very clean, and provides
+    a boundary that makes it easy to visually separate the plot from the
+    canvas. I also changed the font to `"Times"` and `base_size` to 15
+    to make the axis ticks pop out more.
+
+5)  `axis.title.x = element_text(size = 18, vjust = -2)` and
+    `axis.title.y = element_text(size = 18, vjust = 2)` Adjusted the
+    size of the axis titles to make them easier to read. Also moved them
+    further away from the plot in efforts to make the plot feel less
+    cramped.
+
+6)  `axis.text.x = element_text(size = 12)` and
+    `axis.text.y = element_text(size = 12)` 
+    Made the axis tick labels
+    larger so they are easier to read. I think that this is important so
+    that the viewer can easily understand the coordinates in the plot.
+
+7)  `plot.title = element_text(size = 20, hjust = 0.5, vjust = 2)` Made
+    the plot title a bit larger and centered it. Also increased the
+    distance between the plot and the title, again in efforts to make
+    the plot look less cramped.
+
+8)  `plot.caption = element_text(size = 9, vjust = -5)` Reduced the size
+    of the caption so it doesn't interfere with the axis title. Also
+    moved the caption down on the canvas for the same reason.
+
+9)  `plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "inches")` Increased the
+    plot margins so that it takes up a greater proportion of the canvas.
+    This can be useful in improving the readability of the graph.
+
+## Part 7. R session info
+
+```{r}
+options(width = 120)
+sessionInfo()
 ```
