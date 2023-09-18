@@ -457,8 +457,8 @@ table.mean_ingredients_by_year.long %>%
     se = FALSE
   ) +
   facet_wrap(~ingredient) +
-  theme(legend.position = "none") +
   theme_bw() +
+  theme(legend.position = "none") +
   labs(title = "How have chocolate ingredients and characteristics change over time?",
        subtitle = "Based on review data from 2006 to 2021",
        x = "Year",
@@ -576,7 +576,7 @@ chocolate %>%
     )) +
   geom_half_violin(position = position_nudge(x = -0.15), fill = "chocolate") +
   geom_jitter(size = 0.5, width = 0.075, alpha = 0.35) +
-  labs(title = "Chocolate ratings become less variable over time",
+  labs(title = "Chocolate ratings are less variable over time",
        subtitle = "A visualization of chocolate ratings by year of review (from 2006 to 2021)",
        caption = "Created by Josh Stim using `gghalves` and `ggplot2`") +
   xlab("Year of Review") +
@@ -607,7 +607,7 @@ chocolate %>%
     adjusted the size of the points, the width of the jitter, and made
     the points translucent by setting `alpha = 0.35`.
 
-3)  `labs(title = "Chocolate ratings become less variable over time",  subtitle = "A visualization of chocolate ratings by year of review (from 2006 to 2021)",  caption = "Created by Josh Stim using the gghalves and ggplot2")`
+3)  `labs(title = "Chocolate ratings are less variable over time",  subtitle = "A visualization of chocolate ratings by year of review (from 2006 to 2021)",  caption = "Created by Josh Stim using the gghalves and ggplot2")`
     Created an informative title and subtitle for the plot. Also created
     a caption to document who created the visualization, and with what R
     packages.
